@@ -88,7 +88,8 @@ namespace Course231
             Print("Names of products from tools", r2);
 
             //vou criar um objeto anônimo, com alias para categoria
-            IEnumerable<object> r3 = products
+            //COLOCO UM ALIAS OU APELIDO PARA TIRAR A AMBIGUIDADE DO name da categoria com o dos products
+            /*IEnumerable<object> r3 = products
                         .Where(
                                 p => p.Name[0] == 'C'
 
@@ -101,9 +102,22 @@ namespace Course231
 
                                  }
                                );
+            */
+
+            IEnumerable<object> r3 =
+                    from p in products
+                    where p.Name[0] == 'C'
+                    select new
+                    {
+                        p.Name,
+                        p.Price,
+                        CategoriaName = p.Category.Name
+
+                    };
 
             Print("Nomes começado com C", r3);
 
+            /*
             IEnumerable<Product> r4 = products
                                 .Where(
                                     p => p.Category.Tier == 1
@@ -118,136 +132,48 @@ namespace Course231
                                         p => p.Name
 
                                      );
+            */
+
+            IEnumerable<Product> r4 =
+                    from p in products
+                    where p.Category.Tier == 1
+                    orderby p.Name
+                    orderby p.Price
+                    select p;
 
             Print("TIER 1 order by price e pelo nome", r4);
 
             //Do resultado do R5 ele vai pular 2 elementos e pegar somente 4
-            IEnumerable<Product> r5 = r4.Skip(2).Take(4);
+            //IEnumerable<Product> r5 = r4.Skip(2).Take(4);
 
+            IEnumerable<Product> r5 =
+                                   ( from p in r4
+                                    select p )
+                                        .Skip(2).Take(4);
+           
             Print("TIER 1 order by price e pelo nome - Skip(2).Take(4)", r5);
 
-            Product r6 = products.First(); //r6 = products.Last();
-
+            //Product r6 = products.First(); //r6 = products.Last();
+            Product r6 = (
+                            from p in products
+                            select p
+                            ).First();
+             
             Console.WriteLine("FIRST TESTE1: " + r6);
 
-            //Neste caso como não teremos nenhum resultado com preco MAIOR que 3000.0, o FIRST iria dar uma EXCEPTION.. teriamos que
-            //tratá-la caso isso aconteça ou usar o FirstOrDefault, o que fizemos agora
-            Product r7 = products
-                        .Where(
-                                p => p.Price > 3000.0
-
-                                )
-                        .FirstOrDefault();
-
-            Console.WriteLine("FIRST TESTE1: <usando o first ou default " + r7);
-
-            //aqui usando com o sigleordefault, como sei que é ID... só tem 1 elemento ou nao tem nenhum
-            //se eu usar somente o single eu consigo pegar somente UM ELEMENTO e daí não irá retornar uma colecao
-            //MAS UM SIMPLES ELEMENTO
-            Product r8 = products
-                        .Where(p => p.Id == 3)
-                        .SingleOrDefault();
-
-            Console.WriteLine("SINGLE: <usando o single ou default: " + r8);
-
-            //nao tem ninguem com o ID 100
-            r8 = products
-                        .Where(p => p.Id == 100)
-                        .SingleOrDefault();
-
-            Console.WriteLine("SINGLE: <usando o single ou default: " + r8);
-
-            //Vou usar O FIRST so para ter um elemento PRODUCT E NAO UMA COLECAO IEnumerable
-            Product r9 = products
-                      .Where(p => p.Price <= 100.0)
-                      .First();
-
-            Print2("FIRST: EXISTEM MAIS DO QUE 1 PRODUTO, mas usei o FIRST: ", r9);
-
-            /*
-            //UMA COLECAO IEnumerable
-            IEnumerable<Product> r10 = products
-                      .Where(
-                                p => p.Price <= 100.0
-                             );
-
-            Print("SINGLE: EXISTEM MAIS DO QUE 1 PRODUTO, agora nao usei o single: ", r10);
-            */
-
-            //se eu deixar sem a expressão lambada eu teria que implementar o IComparable, senão dá uma exceção
-            double r10 = products
-                            .Max(
-                                    p => p.Price
-
-                                    );
-
-            Print2("PRICE: Preço máximo: ", r10);
-
-            double r11 = products
-                            .Min(
-                                    p => p.Price
-
-                                    );
-
-            Print2("PRICE: Preço mínimo: ", r11);
-
-            double r12 = products
-                             .Where(p => p.Category.Id == 1)
-                             .Sum(p => p.Price);
-
-
-            Print2("ID DA CATEGORIA 1: SOMA ", r12);
-
-            double r13 = products
-                             .Where(p => p.Category.Id == 1)
-                             .Average(p => p.Price);
-
-
-            Print2("ID DA CATEGORIA 1: média dos preços ", r13);
-
-            //Aqui é um macete para não retornar uma colecao vazia que nao existe ID 5 nao tem
-            //Usando antes o select com a expressao lambda do filtro que iria para o average
-            //e depois usa-se o DEFAULTIFEMPTY! e daí somente chama-se o avarage!
-            var r14 = products
-                            .Where(p => p.Category.Id == 5)
-                            .Select(p => p.Price)
-                            .DefaultIfEmpty(0.0)
-                            .Average()
-                            ;
-
-            Print2("ID DA CATEGORIA 15 NAO EXISTE: média dos preços - COLEÇÃO VAZIA ", r14.ToString("C", new CultureInfo("pt-BR")));
-
-
-            //fazendo minha própria operação
-            //usando uma funcao anonima!
-            //É uma função que recebe x e y (x, y
-            //e faz a operacao que quero agregar... somando o x e y ... 
-
-            double r15 = products
-                            .Where(p => p.Category.Id == 1)
-                            .Select(p => p.Price)
-                            .Aggregate(
-                                        (x, y) => x + y
-                            );
-
-            Print2("CATEGORIA AGREGATE SUM ", r15.ToString("C", new CultureInfo("pt-BR")));
-
-            //Com resultado vazio... passo um valor padrao inicial como 0.00
-            double r16 = products
-                            .Where(p => p.Category.Id == 5)
-                            .Select(p => p.Price)
-                            .Aggregate(
-                                        0.0, (x, y) => x + y
-                            );
-
-            Print2("CATEGORIA AGREGATE SUM QUE RETORNARIA VAZIO PQ ID 5 NAO TEM", r16.ToString("C", new CultureInfo("pt-BR")));
 
 
             //POR CATEGORIA
+            /*
             var r17 = products
                             .GroupBy(
                                 p => p.Category
                             );
+            */
+
+            var r17 =
+                        from p in products
+                        group p by p.Category;
 
             foreach (IGrouping<Category, Product> group in r17)
             {
